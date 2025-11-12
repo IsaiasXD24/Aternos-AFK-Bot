@@ -4,18 +4,19 @@ const pathfinder = require('mineflayer-pathfinder').pathfinder;
 const { GoalBlock } = require('mineflayer-pathfinder').goals;
 
 const config = require('./settings.json');
-const express = require('express'); // <--- 1. Importa Express
+const express = require('express');
 
+// --- Configuración del Servidor Web (para mantener el bot vivo en Render) ---
 const app = express();
-const port = process.env.PORT || 3000; // <--- 2. Define el puerto correcto
+const port = process.env.PORT || 3000;
 
-// --- Código del Servidor Web (para mantener Replit y el Bot vivos) ---
 app.get('/', (req, res) => {
-  res.send('Bot is running and kept alive by Uptime Robot.');
+    // Render utiliza esta ruta para verificar que el servicio está activo.
+    res.send('Bot is running and kept alive by Uptime Robot.');
 });
 
-app.listen(port, () => { // <--- 3. Usa la variable 'port'
-  console.log(`Web server started and listening on port ${port}`);
+app.listen(port, () => {
+    console.log(`Web server started and listening on port ${port}`);
 });
 // --- Fin del Servidor Web ---
 
@@ -33,7 +34,9 @@ function createBot() {
     bot.loadPlugin(pathfinder);
     const mcData = require('minecraft-data')(bot.version);
     const defaultMove = new Movements(bot, mcData);
-    bot.settings.colorsEnabled = false;
+    
+    // NOTA: bot.settings.colorsEnabled = false; HA SIDO MOVIDA DENTRO DE bot.once('spawn')
+    // para asegurar que bot.settings exista y evitar el TypeError.
 
     let pendingPromise = Promise.resolve();
 
@@ -43,15 +46,14 @@ function createBot() {
             console.log(`[Auth] Sent /register command.`);
 
             bot.once('chat', (username, message) => {
-                console.log(`[ChatLog] <${username}> ${message}`); // Log all chat messages
+                console.log(`[ChatLog] <${username}> ${message}`);
 
-                // Check for various possible responses
                 if (message.includes('successfully registered')) {
                     console.log('[INFO] Registration confirmed.');
                     resolve();
                 } else if (message.includes('already registered')) {
                     console.log('[INFO] Bot was already registered.');
-                    resolve(); // Resolve if already registered
+                    resolve();
                 } else if (message.includes('Invalid command')) {
                     reject(`Registration failed: Invalid command. Message: "${message}"`);
                 } else {
@@ -67,7 +69,7 @@ function createBot() {
             console.log(`[Auth] Sent /login command.`);
 
             bot.once('chat', (username, message) => {
-                console.log(`[ChatLog] <${username}> ${message}`); // Log all chat messages
+                console.log(`[ChatLog] <${username}> ${message}`);
 
                 if (message.includes('successfully logged in')) {
                     console.log('[INFO] Login successful.');
@@ -84,6 +86,13 @@ function createBot() {
     }
 
     bot.once('spawn', () => {
+        // --- CORRECCIÓN DE ERROR APLICADA AQUÍ ---
+        // 'bot.settings' existe después de 'spawn' y de cargar 'pathfinder'
+        if (bot.settings) {
+            bot.settings.colorsEnabled = false;
+        }
+        // ------------------------------------------
+
         console.log('\x1b[33m[AfkBot] Bot joined the server', '\x1b[0m');
 
         if (config.utils['auto-auth'].enabled) {
