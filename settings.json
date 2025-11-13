@@ -1,6 +1,6 @@
 {
   "bot-account": {
-    "username": "ElDiosdelcielo777", 
+    "username": "ElDiosdelCielo77777", 
     "password": "",
     "type": "offline"
   },
@@ -43,12 +43,11 @@
         "era con la vale",
         "guarda q te patean",
         "ola",
-        "que compran celulares en el fraverga"
       ]
     },
 
     "chat-log": true,
     "auto-reconnect": true,
-    "auto-recconect-delay": 500
+    "auto-recconect-delay": 1000
   }
 }
