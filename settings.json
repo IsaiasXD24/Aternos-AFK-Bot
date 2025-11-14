@@ -2,7 +2,7 @@
   "bot-account": {
     "username": "ElDiosdelCielo", 
     "password": "",
-    "type": "microsoft"
+    "type": "mojang"
   },
 
   "server": {
