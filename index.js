@@ -1,4 +1,5 @@
 // Este código es para asegurar que el bot se mantenga encendido en Replit o Render
+require("./webserver");
 const express = require('express');
 const app = express();
 const port = 3000; // Puerto estándar para Replit
