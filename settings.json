@@ -49,6 +49,6 @@
 
     "chat-log": true,
     "auto-reconnect": true,
-    "auto-recconect-delay": 15000 // <--- ¡CAMBIO CRUCIAL! Aumentado a 15 segundos (15000ms)
+    "auto-recconect-delay": 15000
   }
 }
