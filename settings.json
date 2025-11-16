@@ -6,7 +6,7 @@
   },
 
   "server": {
-    "ip": "GRZ247.aternos.me", 
+    "ip": "GRZ247.aternos.me:58998", 
     "port": 58998,   
     "version": "1.14.4"   
   },
