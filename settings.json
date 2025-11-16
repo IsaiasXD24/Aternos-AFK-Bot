@@ -2,13 +2,13 @@
   "bot-account": {
     "username": "ElDiosdelCielo", 
     "password": "",
-    "type": "mojang"
+    "type": "offline"
   },
 
   "server": {
     "ip": "GRZ247.aternos.me", 
-    "port": 58998,   
-    "version": "1.14.4"   
+    "port": 58998,
+    "version": "1.14.4" 
   },
   
   "position": {
@@ -49,6 +49,6 @@
 
     "chat-log": true,
     "auto-reconnect": true,
-    "auto-recconect-delay": 1000
+    "auto-recconect-delay": 15000 // <--- ¡CAMBIO CRUCIAL! Aumentado a 15 segundos (15000ms)
   }
 }
