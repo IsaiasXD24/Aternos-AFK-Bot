@@ -2,7 +2,7 @@
 require("./webserver");
 const express = require('express');
 const app = express();
-const port = 3000; // Puerto estándar para Replit
+const port = 5000; // Puerto estándar para Replit
 
 app.get('/', (req, res) => {
   res.send('Bot is running and kept alive by Uptime Robot.');
