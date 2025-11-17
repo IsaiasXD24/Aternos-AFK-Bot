@@ -106,7 +106,7 @@ function createBot() {
             bot.setControlState('jump', true);
             setTimeout(() => bot.setControlState('jump', false), 500);
 
-        }, 10000); // Cada 10 segundos
+        }, 3000); // Cada 3 segundos
     }
 
     // Chat Messages
