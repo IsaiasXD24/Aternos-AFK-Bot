@@ -1,7 +1,8 @@
- res.send('Bot is running and kept alive by Uptime Robot.');
+app.get('/', (req, res) => {
+  res.send('Bot is running and kept alive by Uptime Robot.');
 });
 
-app.listen(port, () => {
+app.listen(port, () => { // <--- 3. Usa la variable 'port'
   console.log(`Web server started and listening on port ${port}`);
 });
 
