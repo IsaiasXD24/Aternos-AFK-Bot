@@ -1,11 +1,4 @@
-// Este código es para asegurar que el bot se mantenga encendido en Replit o Render
-require("./webserver");
-const express = require('express');
-const app = express();
-const port = 5000; // Puerto estándar para Replit
-
-app.get('/', (req, res) => {
-  res.send('Bot is running and kept alive by Uptime Robot.');
+ res.send('Bot is running and kept alive by Uptime Robot.');
 });
 
 app.listen(port, () => {
