@@ -1,31 +1,56 @@
+// Importaciones del servidor web y del bot
+const express = require('express');
+const app = express();
+const mineflayer = require('mineflayer');
+const settings = require('./settings.json'); // Mantenemos la carga para la lógica de utilidades (AFK, Chat)
+
+// --- 1. CONFIGURACIÓN DEL SERVIDOR WEB ---
+// Render usa la variable PORT. Si no existe, usamos 3000 por defecto.
+const port = process.env.PORT || 3000;
+
 app.get('/', (req, res) => {
   res.send('Bot is running and kept alive by Uptime Robot.');
 });
 
-app.listen(port, () => { // <--- 3. Usa la variable 'port'
-  console.log(`Web server started and listening on port ${port}`);
+app.listen(port, () => { // <-- Servidor escuchando el puerto de Render
+  console.log(`[WebServer] Server started and listening on port ${port}.`);
 });
+
+// ------------------------------------------------------------------
+// --- 2. CARGA DE VARIABLES DE ENTORNO (SECRETS) ---
+// Usamos las Variables de Entorno de Render como prioridad. 
+// Si la variable de entorno no existe (por ejemplo, en pruebas locales), usamos el valor de settings.json como fallback.
+
+const BOT_USERNAME = process.env.BOT_USERNAME || settings["bot-account"].username;
+const BOT_PASSWORD = process.env.BOT_PASSWORD || settings["bot-account"].password;
+const BOT_HOST = process.env.BOT_HOST || settings.server.ip;
+// Usamos BOT_PORT_MC para el puerto de Minecraft y evitamos el conflicto con el puerto del webserver (process.env.PORT)
+const BOT_PORT_MC = process.env.BOT_PORT_MC ? parseInt(process.env.BOT_PORT_MC) : settings.server.port;
+
+const botOptions = {
+    // Usamos las variables de entorno para las credenciales:
+    host: BOT_HOST,
+    port: BOT_PORT_MC, 
+    username: BOT_USERNAME,
+    password: BOT_PASSWORD,
+    // Usamos settings.json para los valores que no son secretos:
+    version: settings.server.version,
+    auth: settings["bot-account"].type,
+};
 
 // ------------------------------------------------------------------
 // LÓGICA PRINCIPAL DEL BOT AFK
 // ------------------------------------------------------------------
 
-const mineflayer = require('mineflayer');
-const settings = require('./settings.json');
-
-const botOptions = {
-    host: settings.server.ip,
-    port: settings.server.port,
-    username: settings.bot.username,
-    password: settings.bot.password,
-    version: settings.server.version,
-    auth: settings.bot.type,
-    // La opción de reconexión ahora se gestiona en 'utils'
-};
-
 function createBot() {
+    // Verificación de seguridad
+    if (!botOptions.username || !botOptions.host) {
+        console.error("❌ ERROR CRÍTICO: Las credenciales (BOT_USERNAME, BOT_HOST) no están configuradas en Render. Saliendo del proceso.");
+        process.exit(1);
+    }
+    
     const bot = mineflayer.createBot(botOptions);
-    console.log(`[AfkBot] Trying to connect to ${settings.server.ip}:${settings.server.port} with account: ${settings.bot.username} (${settings.bot.type})`);
+    console.log(`[AfkBot] Trying to connect to ${botOptions.host}:${botOptions.port} with account: ${botOptions.username} (${botOptions.auth})`);
 
     // --- EVENTOS DEL BOT ---
 
@@ -33,67 +58,81 @@ function createBot() {
         console.log(`[AfkBot] Bot joined the server!`);
         // Desactivamos el movimiento inicial si la posición está deshabilitada
         if (settings.position.enabled) {
+            // Nota: El comando look original podría estar fallando. Mantenemos el setControlState para asegurar el movimiento.
             bot.setControlState('forward', true);
-            bot.look(settings.position.x, settings.position.y, settings.position.z, false, () => {
-                console.log(`[AfkBot] Moving to initial position.`);
-            });
+            console.log(`[AfkBot] Initial forward movement started.`);
         }
     });
 
     bot.on('end', (reason) => {
         console.log(`[AfkBot] Disconnected. Reason: ${reason}`);
 
-        if (settings.utils.auto_reconnect) {
-            console.log(`[AfkBot] Reconnecting in ${settings.utils.auto_recconect_delay / 1000} seconds...`);
-            setTimeout(createBot, settings.utils.auto_recconect_delay);
+        // Nota: El archivo settings.json usa 'auto-reconnect' y 'auto-recconect-delay' (con 3 c's).
+        if (settings.utils['auto-reconnect']) {
+            const reconnectDelay = settings.utils['auto-recconect-delay'] || 15000;
+            console.log(`[AfkBot] Reconnecting in ${reconnectDelay / 1000} seconds...`);
+            setTimeout(createBot, reconnectDelay);
+        } else {
+            // Si el auto-reconnect está deshabilitado, forzamos la salida para que Render reinicie el servicio.
+             console.log('[AfkBot] Auto-reconnect disabled. Forcing process exit for Render.');
+             process.exit(1);
         }
     });
 
     bot.on('kicked', (reason) => {
         console.log(`[AfkBot] Kicked from server. Reason: ${reason}`);
+        bot.end(); // Fuerza el evento 'end' para que se active el auto-reconnect
     });
 
     bot.on('error', (err) => {
         console.error(`[ERROR] ${err}`);
+        bot.end(); // Fuerza el evento 'end' para que se active el auto-reconnect
     });
 
     // --- MÓDULOS DEL BOT ---
 
     // Anti-AFK
-    if (settings.utils['anti-afk'].enabled) {
+    if (settings.utils['anti-afk'] && settings.utils['anti-afk'].enabled) {
         console.log('[INFO] Started anti-afk module');
         setInterval(() => {
-            if (bot.getControlState('sneak') !== settings.utils['anti-afk'].sneak) {
-                bot.setControlState('sneak', settings.utils['anti-afk'].sneak);
-                bot.setControlState('jump', true);
-                setTimeout(() => bot.setControlState('jump', false), 500);
+            const shouldSneak = settings.utils['anti-afk'].sneak;
+            
+            // Toggle sneak state (caminar agachado)
+            if (bot.getControlState('sneak') !== shouldSneak) {
+                bot.setControlState('sneak', shouldSneak);
             }
+            
+            // Jump movement (salto)
+            bot.setControlState('jump', true);
+            setTimeout(() => bot.setControlState('jump', false), 500);
+
         }, 10000); // Cada 10 segundos
     }
 
     // Chat Messages
-    if (settings.utils['chat-messages'].enabled && settings.utils['chat-messages'].messages.length > 0) {
+    if (settings.utils['chat-messages'] && settings.utils['chat-messages'].enabled && settings.utils['chat-messages'].messages.length > 0) {
         let messageIndex = 0;
         console.log('[INFO] Started chat-messages module');
         
         const sendNextMessage = () => {
-            if (bot.getControlState('forward')) { // Solo envía si está "activo"
+            // Solo enviar si el bot está conectado y ha cargado la entidad
+            if (bot.entity && settings.utils['chat-messages'].repeat) {
                 const message = settings.utils['chat-messages'].messages[messageIndex];
                 bot.chat(message);
                 
                 messageIndex = (messageIndex + 1) % settings.utils['chat-messages'].messages.length;
 
-                if (settings.utils['chat-messages'].repeat) {
-                    setTimeout(sendNextMessage, settings.utils['chat-messages']['repeat-delay'] * 1000); // segundos a milisegundos
-                }
-            } else {
-                // Si el bot no está en el juego, intenta de nuevo después de 30 segundos
+                const delay = settings.utils['chat-messages']['repeat-delay'] || 120; // Default 120 secs
+                setTimeout(sendNextMessage, delay * 1000); 
+            } else if (settings.utils['chat-messages'].repeat) {
+                // Si no está conectado, intenta de nuevo después de 30 segundos
                 setTimeout(sendNextMessage, 30000);
             }
         };
 
-        // Inicia el ciclo de mensajes solo después de un tiempo para no saturar al inicio
-        setTimeout(sendNextMessage, settings.utils['chat-messages']['repeat-delay'] * 1000);
+        // Inicia el ciclo de mensajes después del primer retraso
+        const initialDelay = settings.utils['chat-messages']['repeat-delay'] || 120;
+        setTimeout(sendNextMessage, initialDelay * 1000);
     }
 
     // Chat Log
@@ -102,7 +141,6 @@ function createBot() {
             console.log(`[CHAT] ${message.toAnsi()}`);
         });
     }
-
 }
 
 // Inicializa el bot
