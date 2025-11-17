@@ -1,0 +1,54 @@
+{
+  "bot-account": {
+    "username": "ElDiosDelCielo", 
+    "password": "",
+    "type": "offline"
+  },
+
+  "server": {
+    "ip": "GRZ247.aternos.me", 
+    "port": 58998,   
+    "version": "1.14.4"   
+  },
+  
+  "position": {
+    "enabled": false,
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+
+  "utils": {
+    "auto-auth": {
+      "enabled": false,
+      "password": ""
+    },
+
+    "anti-afk": {
+      "enabled": true,
+      "sneak": true
+    },
+
+    "chat-messages": {
+      "enabled": true,
+      "repeat": true,
+      "repeat-delay": 120,
+
+      "messages": [
+        "moriste en el madrid",
+        "negro geiiii",
+        "jose gordo gei",
+        "maaaaaai",
+        "moriste madrid",
+        "era con la vale",
+        "guarda q te patean",
+        "ola",
+        "mas bostero q culiar con la prima"
+      ]
+    },
+
+    "chat-log": true,
+    "auto-reconnect": true,
+    "auto-recconect-delay": 500
+  }
+}
