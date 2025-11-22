@@ -19,6 +19,7 @@
   },
 
   "utils": {
+    "movement_delay": 2000,
     "auto-auth": {
       "enabled": false,
       "password": ""
