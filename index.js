@@ -90,23 +90,50 @@ function createBot() {
     });
 
     // --- MÓDULOS DEL BOT ---
-
-    // Anti-AFK
+    // Anti-AFK con Movimiento Aleatorio
     if (settings.utils['anti-afk'] && settings.utils['anti-afk'].enabled) {
-        console.log('[INFO] Started anti-afk module');
+        console.log('[INFO] Started anti-afk module with random movement.');
+
+        // Lista de controles de movimiento de Minecraft
+        const movements = ['forward', 'back', 'left', 'right'];
+        let currentMovement = 'forward'; // Movimiento inicial por defecto
+
+        // Intervalo para el movimiento aleatorio y acciones AFK
+        // Usamos el nuevo 'movement_delay' de settings.json (o 2000ms por defecto)
+        const moveDelay = settings.utils['anti-afk']['movement_delay'] || 2000;
+
         setInterval(() => {
+            // Seguridad: VERIFICAR si el bot está activo (tiene una entidad) antes de intentar moverlo.
+            if (!bot.entity) {
+                return;
+            }
+            
+            // 1. Lógica de Salto (Jump) y Agacharse (Sneak)
             const shouldSneak = settings.utils['anti-afk'].sneak;
             
-            // Toggle sneak state (caminar agachado)
             if (bot.getControlState('sneak') !== shouldSneak) {
                 bot.setControlState('sneak', shouldSneak);
             }
             
-            // Jump movement (salto)
+            // Salto: hacemos que salte por un momento
             bot.setControlState('jump', true);
             setTimeout(() => bot.setControlState('jump', false), 500);
 
-        }, 3000); // Cada 3 segundos
+
+            // 2. Lógica de Movimiento Aleatorio (W, A, S, D)
+            
+            // a) Desactivar el movimiento actual
+            bot.setControlState(currentMovement, false); 
+            
+            // b) Elegir un nuevo movimiento aleatorio de la lista
+            const newMovementIndex = Math.floor(Math.random() * movements.length);
+            const newMovement = movements[newMovementIndex];
+            
+            // c) Activar el nuevo movimiento
+            bot.setControlState(newMovement, true);
+            currentMovement = newMovement; // Guardamos el nuevo movimiento como el actual
+
+        }, moveDelay); 
     }
 
     // Chat Messages
