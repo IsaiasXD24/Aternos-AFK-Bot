@@ -2,7 +2,7 @@
   "bot-account": {
     "username": "ElHijoDelCielo", 
     "password": "",
-    "type": "offline"
+    "type": "mojang"
   },
 
   "server": {
@@ -19,7 +19,6 @@
   },
 
   "utils": {
-    "movement_delay": 2000,
     "auto-auth": {
       "enabled": false,
       "password": ""
@@ -36,15 +35,9 @@
       "repeat-delay": 120,
 
       "messages": [
-        "moriste en el madrid",
+        "ola soy el bot d la vida",
         "negro geiiii",
-        "jose gordo gei",
-        "maaaaaai",
-        "moriste madrid",
-        "era con la vale",
-        "guarda q te patean",
-        "ola",
-        "mas bostero q culiar con la prima"
+        "ignora estos mensajes JDSKJSDKDS"
       ]
     },
 
